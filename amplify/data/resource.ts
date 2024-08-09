@@ -7,12 +7,78 @@ specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "Todo" records.
 =========================================================================*/
 const schema = a.schema({
-  Todo: a
-    .model({
-      content: a.string(),
-    })
-    .authorization((allow) => [allow.owner()]),
+  Class: a.model({
+    id: a.id(),
+    name: a.string(),
+    description: a.string(),
+    image: a.string(),
+    class_flag: a.int(),
+    courseId: a.id().index("byCourse"),
+    url: a.string(),
+    comments: a.hasMany("Comment", "classId", "byClass"),
+    author: a.string(),
+  }).authorization((allow) => [allow.private()]),
+
+  Course: a.model({
+    id: a.id(),
+    name: a.string(),
+    classes: a.hasMany("Class", "courseId", "byCourse"),
+  }).authorization((allow) => [allow.private()]),
+
+  Comment: a.model({
+    id: a.id(),
+    classId: a.id().index("byClass"),
+    content: a.string().optional(),
+    owners: a.array(a.string()),
+  }).authorization((allow) => [allow.owner(), allow.private().read()]),
+
+  Track: a.model({
+    classId: a.string().primaryKey("userId"),
+    userId: a.id(),
+    completion: a.boolean(),
+    played: a.string().optional(),
+  }).authorization((allow) => [allow.owner()]),
+
+  Reward: a.model({
+    id: a.id(),
+    classId: a.string(),
+    userId: a.string(),
+    point: a.string(),
+  }).authorization((allow) => [allow.owner()]),
+
+  Profile: a.model({
+    id: a.string().primaryKey(),
+    point: a.int(),
+    userId: a.string(),
+    name: a.string().optional(),
+    organization: a.string().optional(),
+  }).authorization((allow) => [allow.owner()]),
+
+  Survey: a.model({
+    classId: a.string().primaryKey("userId"),
+    userId: a.id(),
+    questionnaireVersion: a.string(),
+    scores: a.array(a.int()),
+  }).authorization((allow) => [allow.owner()]),
+
+  Channel: a.model({
+    id: a.id(),
+    name: a.string(),
+    icon: a.string(),
+    messages: a.hasMany("Message", "channelId", "byChannel"),
+  }).authorization((allow) => [allow.owner(), allow.private().read()]),
+
+  Message: a.model({
+    id: a.id(),
+    channelId: a.id().index("byChannel"),
+    content: a.string(),
+  }).authorization((allow) => [allow.owner(), allow.private().read()]),
+
+  Todo: a.model({
+    content: a.string(),
+  }).authorization((allow) => [allow.owner()]),
 });
+
 
 export type Schema = ClientSchema<typeof schema>;
 
